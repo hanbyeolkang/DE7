@@ -1,24 +1,14 @@
 def solution(n):
-    # if n == 1:
-    #     return [1]
-    
     answer = []
     for i in range(1, n+1):
         arr = [0]*i
         answer.append(arr)
 
-    '''
-        n번 아래로
-        n-1번 오른쪽으로
-        n-2번 대각선으로
-        ...
-        1번  ...
-    '''
-    i, j, num = -1, 0, 0
+    i, j, num, nn = -1, 0, 0, n
     arrow = 0   # 0: 아래, 1: 오른쪽, 2: 왼쪽위
-
-    for x in range(0, n):
-        for y in range(n, 0, -1):
+    
+    for x in range(0, n):           # 0 부터 n 까지 반복
+        for y in range(nn, 0, -1):  # n번, n-1번, n-2번 .. 1번
             num += 1
             if arrow == 0:
                 i += 1
@@ -28,12 +18,12 @@ def solution(n):
                 i -= 1
                 j -= 1
             answer[i][j] = num
-        n -= 1
+        nn -= 1
         arrow = (arrow + 1) % 3
 
     return sum(answer, [])  # 1차원 배열로
 
 
-print(solution(4))
+print(solution(4))  # 예상 결과 : [1, 2, 9, 3, 10, 8, 4, 5, 6, 7]
 
 # https://school.programmers.co.kr/learn/courses/30/lessons/68645
