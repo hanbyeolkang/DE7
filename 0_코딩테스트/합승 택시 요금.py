@@ -1,55 +1,56 @@
-import copy
-import sys
-import difflib
+import heapq
 
-# c:현재위치, t:목적지, fList:요금 리스트, vList:방문중인 지점 리스트, rList:가능한 경로 리스트
-def bfs(c, t, routes, vList, rList):
-    vList.append(c)     # 현재 지점을 방문중인 지점에 넣기
-    if c == t:          # 목적지에 도착했으면 가능한 경로 리스트에 추가
-        rList.append(copy.deepcopy(vList))
-    else:
-        # 현재 있는 곳에서 갈 수 있는 지점들 모두 순회
-        nList = [y for x, y in routes if x == c and y not in vList]  
-        for n in nList:
-            bfs(n, t, routes, vList, rList)
-            vList.pop()     # 방문 종료
+# 무한
+INF = float('inf')
 
+# start부터 각 지점(1~n)까지 최소 요금 구하기
+def dijkstra(n, graph, start):
+    dist = [INF]*(n+1)  # start 에서 각 지점까지의 최소 요금
+    hq = [(0, start)]   # (비용, 노드번호) 튜플을 담을 최소 힙 (우선순위 큐. 비용순)
 
-# 경로 요금 계산
-def calFare(route, fDict):
-    if len(route) == 0:
-        return 0
+    while hq:
+        fare, node = heapq.heappop(hq)
+
+        # 이미 저장되어 있는 최단 요금보다 크면 pass
+        if dist[node] < fare:
+            continue
+
+        for next in range(1, n+1):
+            # newFare = node에서 next까지 가는 요금
+            newFare = graph[node][next]
+            if newFare == INF:
+                continue
+
+            # newFare 에 start에서 node까지 오는데 든 요금 더해주기
+            newFare += fare
+            if newFare < dist[next]:
+                dist[next] = newFare
+                if node != next:
+                    heapq.heappush(hq, (newFare, next))
     
-    fare = 0
-    for i in range(0, len(route)-1):
-        x = route[i]
-        y = route[i+1]
-        fare += fDict[(x, y)]
-    return fare
+    return dist
 
 
 def solution(n, s, a, b, fares):
-    # 양방향 간선으로 저장 [x, y], [y, x]
-    routes = [[a, b] for x, y, f in fares for a, b in ((x, y), (y, x))]
-    aRoutes, bRoutes = [], []
-    bfs(s, a, routes, [], aRoutes)  # aRoutes: a 로 가는 모든 경로
-    bfs(s, b, routes, [], bRoutes)  # bRoutes: b 로 가는 모든 경로
+    graph = [[INF for _ in range(n+1)] for _ in range(n+1)]
+    for i in range(1, n+1):
+        graph[i][i] = 0
 
-    # key: (지점1, 지점2), value: 지점1에서 지점2까지의 요금
-    fDict = {(a, b): f for x, y, f in fares for a, b in ((x, y), (y, x))}
-    smallFare = sys.maxsize
-    for ar in aRoutes:
-        for br in bRoutes:
-            fare = calFare(ar, fDict) + calFare(br, fDict)
-            matcher = difflib.SequenceMatcher(None, ar, br)
-            match = matcher.find_longest_match(0, len(ar), 0, len(br))
-            if match.size > 0:
-                abr = ar[match.a : match.a + match.size]    # 겹치는 구간
-                fare -= calFare(abr, fDict)
+    for fare in fares:
+        x, y, f = fare[0], fare[1], fare[2]
+        graph[x][y] = f
+        graph[y][x] = f
 
-            smallFare = min(smallFare, fare)
+    sFares = dijkstra(n, graph, s)  # s에서 1~n까지 최소 요금 리스트
+    aFares = dijkstra(n, graph, a)  # a에서 1~n까지 최소 요금 리스트
+    bFares = dijkstra(n, graph, b)  # b에서 1~n까지 최소 요금 리스트
 
-    return smallFare
+    answer = INF
+    for i in range(1, n+1):
+        fare = sFares[i] + aFares[i] + bFares[i]
+        answer = min(answer, fare)
+
+    return answer
 
 
 n, s, a, b = 6, 4, 6, 2
