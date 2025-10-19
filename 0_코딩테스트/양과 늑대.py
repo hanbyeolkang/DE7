@@ -17,8 +17,8 @@ def solution(info, edges):
         nextNodes.discard(node)         # 방문할 노드 리스트에서 현재 노드 제거
         nextNodes.update(graph[node])   # 방문할 노드 리스트에 갈 수 있는 자식 노드 추가
 
-        for next in nextNodes:
-            visit(next, info, graph, sumCnt, sheepCnt, nextNodes.copy())    # copy 주의
+        for nextNode in nextNodes:
+            visit(nextNode, info, graph, sumCnt, sheepCnt, nextNodes.copy())    # copy 주의
     
     maxSheepCnt = 0
     visit(0, info, graph, 0, 0, set())
