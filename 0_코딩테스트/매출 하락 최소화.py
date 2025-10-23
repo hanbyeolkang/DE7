@@ -1,46 +1,52 @@
-import heapq
-
 def solution(sales, links):
-    sales = [-1] + sales                    # sales[i]: i번 직원의 매출
-    teams = ['' for _ in range(len(sales))] # teams[i]: i번 직원이 속한 팀들. ','로 이어진 string
-    teamInfo = {}                           # key: 팀장, value: (매출, 팀원). 매출 순으로 오름차순
+    sales = [0] + sales                     # idx 시작을 1로 맞춰줌
+    link = [[] for _ in range(len(sales))]  # link[i]: i번 노드의 자식 노드들
+    dp = [[0, 0] for _ in range(len(sales))]    # dp[i][0]: 본인 참석 O, dp[i][1]: 본인 참석 X
 
-    for leader, staff in links:
-        teams[staff] = str(leader)
-        if leader not in teamInfo:
-            teamInfo[leader] = []
-        heapq.heappush(teamInfo[leader], (sales[staff], staff))
+    for parent, child in links:
+        link[parent].append(child)
+        
 
-    for leader in teamInfo:
-        teams[leader] += f',{leader}'   # 팀장이면, 속한 팀에 자신의 팀 추가
-    teams[1] = '1'
-
-
-    def selectEmployee(tCnt, tIdx, visitTeams, sumSales, isLeader):
-        teamLeader = list(teamInfo.keys())[tIdx]
-        employee = teamLeader if isLeader else teamInfo[teamLeader][0][1]   # 팀장 또는 매출 제일 작은 직원
-        eTeams = teams[employee].split(',') # employee가 속한 팀들
-
-        if set(eTeams) - visitTeams:        # 속한 팀 중 방문하지 않은 팀이 있다면
-            sumSales += sales[employee]
-            visitTeams.update(eTeams)
-
-        nonlocal minSales
-        if len(list(teamInfo.keys())) == len(visitTeams):
-            minSales = min(minSales, sumSales)
+    # 노드 순회하면서 dp 값 구하기
+    def solve(i):
+        # 리프 노드이면
+        if len(link[i]) == 0:
+            dp[i][0] = sales[i]
+            dp[i][1] = 0
             return
+        
+        for child in link[i]:
+            solve(child)
 
-        if tIdx < tCnt-1:
-            selectEmployee(tCnt, tIdx+1, visitTeams.copy(), sumSales, True)
-            selectEmployee(tCnt, tIdx+1, visitTeams.copy(), sumSales, False)
+        dp[i][0] = sales[i] + sum(min(dp[k][0], dp[k][1]) for k in link[i])
+        dp[i][1] = findMinSumWithAtLeastOneAttend(link[i])
+        
+        
+    # 자식 노드 중 최소 하나라도 참석할 때의 최소 매출 찾기
+    def findMinSumWithAtLeastOneAttend(nodes):
+        total = 0
+        allNoAttend = True
+        minDiff = float('inf')
+
+        for child in nodes:
+            attend, noAttend = dp[child][0], dp[child][1]
+            if attend <= noAttend:  # 참석함
+                total += attend
+                allNoAttend = False
+            else:                   # 참석안함
+                total += noAttend
+                minDiff = min(minDiff, attend - noAttend)   # 가장 적은 매출 차이
+
+        if allNoAttend:         # 모두 참석 안하면
+            total += minDiff    # 제일 차이가 적은 노드가 참석해야함
+
+        return total
+    
+
+    solve(1)
+    return min(dp[1][0], dp[1][1])
 
 
-    minSales = float('inf')
-    selectEmployee(len(teamInfo), 0, set(), 0, True)
-    selectEmployee(len(teamInfo), 0, set(), 0, False)
-    return minSales
-
-
-sales = [10, 10, 1, 1]
-links = [[3,2], [4,3], [1,4]]
+sales = [14, 17, 15, 18, 19, 14, 13, 16, 28, 17]
+links = [[10, 8], [1, 9], [9, 7], [5, 4], [1, 5], [5, 10], [10, 6], [1, 3], [10, 2]]
 print(solution(sales, links))   # 예상 결과 : 2
