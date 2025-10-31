@@ -4,3 +4,5 @@
 3. 웹 스크래핑
 4. 데이터 시각화 (Seaborn, Worldcloud)
 5. Django
+6. Redshift
+7. Airflow
