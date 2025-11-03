@@ -76,7 +76,7 @@ def load(schema, table, records):
     try:
         delete_sql = f"DELETE FROM {schema}.{table};"
 
-        alter_sql = f"""
+        insert_sql = f"""
         INSERT INTO {schema}.{table}
         SELECT date, "open", high, low, close, volume FROM(
             SELECT *, ROW_NUMBER() OVER (PARTITION BY date ORDER BY created_date DESC) seq
@@ -86,7 +86,7 @@ def load(schema, table, records):
         """
 
         cur.execute(delete_sql)
-        cur.execute(alter_sql)
+        cur.execute(insert_sql)
         cur.execute("COMMIT;")
 
     except Exception as e:
