@@ -30,7 +30,7 @@ def solution(n, t, m, timetable):
             else:
                 break
     
-    if available_cnt > 0:
+    if available_cnt > 0 or len(shuttles) > 0:
         # 자리가 남았으면, 마지막 셔틀 시간에 타면됨.
         return last_shuttle_time.strftime(TIME_FORMAT)
     else:    
